@@ -10,23 +10,37 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
 endif()
 
-function(ADD_EXAMPLE EXAMPLE_NAME)
-    add_executable(${EXAMPLE_NAME} src/${EXAMPLE_NAME}/main.cpp)
+function(ADD_EXAMPLE)
+    set(options)
+    set(oneValueArgs EXAMPLE_NAME)
+    set(multiValueArgs SHADER_NAMES)
+    cmake_parse_arguments(ADD_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    target_compile_features(${EXAMPLE_NAME} PUBLIC cxx_std_17)
+    add_executable(${ADD_EXAMPLE_EXAMPLE_NAME} src/${ADD_EXAMPLE_EXAMPLE_NAME}/main.cpp)
 
-    target_link_libraries(${EXAMPLE_NAME} PUBLIC $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
-    target_include_directories(${EXAMPLE_NAME} PUBLIC
+    target_compile_features(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC cxx_std_17)
+
+    target_link_libraries(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
+    target_include_directories(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC
     ${DEVKITPRO}/portlibs/switch/include)
 
-    nx_add_shader_program(${EXAMPLE_NAME}_main_vsh src/${EXAMPLE_NAME}/shaders/main_vsh.glsl vert)
-    nx_add_shader_program(${EXAMPLE_NAME}_main_fsh src/${EXAMPLE_NAME}/shaders/main_fsh.glsl frag)
+    set(ASSETS "")
 
-    dkp_add_asset_target(${EXAMPLE_NAME}_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
-    dkp_install_assets(${EXAMPLE_NAME}_romfs DESTINATION shaders TARGETS ${EXAMPLE_NAME}_main_vsh ${EXAMPLE_NAME}_main_fsh)
+    foreach(SHADER_NAME IN LISTS ADD_EXAMPLE_SHADER_NAMES)
+        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh src/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
+        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh src/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
 
-    nx_generate_nacp(${EXAMPLE_NAME}.nacp NAME ${EXAMPLE_NAME} AUTHOR ${PROJECT_AUTHOR})
-    nx_create_nro(${EXAMPLE_NAME} NACP ${EXAMPLE_NAME}.nacp ROMFS ${EXAMPLE_NAME}_romfs)
+        set(ASSETS ${ASSETS} ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh)
+    endforeach()
+
+    dkp_add_asset_target(${ADD_EXAMPLE_EXAMPLE_NAME}_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
+    if(NOT ASSETS STREQUAL "")
+        dkp_install_assets(${ADD_EXAMPLE_EXAMPLE_NAME}_romfs DESTINATION shaders TARGETS ${ASSETS})
+    endif()
+
+    nx_generate_nacp(${ADD_EXAMPLE_EXAMPLE_NAME}.nacp NAME ${ADD_EXAMPLE_EXAMPLE_NAME} AUTHOR ${PROJECT_AUTHOR})
+    nx_create_nro(${ADD_EXAMPLE_EXAMPLE_NAME} NACP ${ADD_EXAMPLE_EXAMPLE_NAME}.nacp ROMFS ${ADD_EXAMPLE_EXAMPLE_NAME}_romfs)
 endfunction()
 
-ADD_EXAMPLE(hello_world)
+ADD_EXAMPLE(EXAMPLE_NAME hello_world)
+ADD_EXAMPLE(EXAMPLE_NAME triangle SHADER_NAMES main)
