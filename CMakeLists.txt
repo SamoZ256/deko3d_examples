@@ -16,6 +16,7 @@ set(SWITCH_LIBRARIES $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
 add_library(example_base STATIC
     src/base/application.cpp
     src/base/deko3d_application.cpp
+    src/base/memory_block.cpp
 )
 
 target_include_directories(example_base PUBLIC ${SWITCH_INCLUDE_DIRS})

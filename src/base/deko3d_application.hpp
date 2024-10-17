@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application.hpp"
+#include "memory_block.hpp"
 
 #include <deko3d.hpp>
 
@@ -14,8 +15,8 @@ protected:
     dk::UniqueDevice device;
     dk::UniqueQueue queue;
 
-    dk::MemBlock dataMemBlock;
-    dk::MemBlock imagesMemBlock;
+    MemoryBlock dataMemBlock;
+    MemoryBlock imagesMemBlock;
 
     dk::Image framebuffers[FRAMEBUFFER_COUNT];
     DkCmdList framebufferCmdlists[FRAMEBUFFER_COUNT];
@@ -38,5 +39,5 @@ private:
 
 protected:
     // Helpers
-    void loadShader(const char *path, DkMemBlock codeMemBlock, u32 memOffset, dk::Shader& shader, u32& codeSize);
+    void loadShader(const char *path, MemoryBlock& codeMemBlock, dk::Shader& shader);
 };

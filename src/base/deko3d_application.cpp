@@ -10,12 +10,12 @@ void Deko3DApplicationBase::initialize() {
     queue = dk::QueueMaker{device}.setFlags(DkQueueFlags_Graphics).create();
 
     // Create memory block for images
-    dataMemBlock = dk::MemBlockMaker{device, 11 * 1024 * 1024}.setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached).create();
-    imagesMemBlock = dk::MemBlockMaker{device, 16 * 1024 * 1024}.setFlags(DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image).create();
+    dataMemBlock.initialize(device, 11 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
+    imagesMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
 
     // Create the static command buffer and feed it freshly allocated memory
     cmdbuf = dk::CmdBufMaker{device}.create();
-    cmdbuf.addMemory(dataMemBlock, 0, STATIC_CMDBUF_SIZE);
+    cmdbuf.addMemory(dataMemBlock.getMemBlock(), dataMemBlock.allocate(STATIC_CMDBUF_SIZE), STATIC_CMDBUF_SIZE);
 
     createFramebuffers();
 
@@ -59,11 +59,9 @@ void Deko3DApplicationBase::createFramebuffers() {
     u64 fbSize  = layoutFramebuffer.getSize();
     u64 fbAlign = layoutFramebuffer.getAlignment();
     fbSize = align(fbSize, fbAlign);
-    u64 offset = 0;
     for (unsigned i = 0; i < FRAMEBUFFER_COUNT; i++) {
         // Allocate a framebuffer
-        framebuffers[i].initialize(layoutFramebuffer, imagesMemBlock, offset);
-        offset += fbSize;
+        framebuffers[i].initialize(layoutFramebuffer, imagesMemBlock.getMemBlock(), imagesMemBlock.allocate(fbSize));
 
         // Generate a command list that binds it
         dk::ImageView colorTarget{ framebuffers[i] };
@@ -88,16 +86,18 @@ void Deko3DApplicationBase::destroyFramebuffers() {
     swapchain.destroy();
 }
 
-void Deko3DApplicationBase::loadShader(const char *path, DkMemBlock codeMemBlock, u32 memOffset, dk::Shader& shader, u32& codeSize) {
+void Deko3DApplicationBase::loadShader(const char *path, MemoryBlock& codeMemBlock, dk::Shader& shader) {
     // Load the shader from file
     FILE* f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
     u32 size = ftell(f);
     rewind(f);
-    fread((char*)dkMemBlockGetCpuAddr(codeMemBlock) + memOffset, size, 1, f);
+
+    size_t offset = codeMemBlock.allocate(align(size, (u32)DK_SHADER_CODE_ALIGNMENT));
+
+    fread((char*)codeMemBlock.getCpuAddr() + offset, size, 1, f);
     fclose(f);
 
     // Create the shader
-    dk::ShaderMaker(codeMemBlock, memOffset).initialize(shader);
-    codeSize = align(size, (u32)DK_SHADER_CODE_ALIGNMENT);
+    dk::ShaderMaker(codeMemBlock.getMemBlock(), offset).initialize(shader);
 }
