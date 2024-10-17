@@ -19,12 +19,11 @@ function(ADD_EXAMPLE EXAMPLE_NAME)
     target_include_directories(${EXAMPLE_NAME} PUBLIC
     ${DEVKITPRO}/portlibs/switch/include)
 
-    # TODO: shaders
-    #nx_add_shader_program(imgui_vsh src/imgui_vsh.glsl vert)
-    #nx_add_shader_program(imgui_fsh src/imgui_fsh.glsl frag)
+    nx_add_shader_program(${EXAMPLE_NAME}_main_vsh src/${EXAMPLE_NAME}/shaders/main_vsh.glsl vert)
+    nx_add_shader_program(${EXAMPLE_NAME}_main_fsh src/${EXAMPLE_NAME}/shaders/main_fsh.glsl frag)
 
     dkp_add_asset_target(${EXAMPLE_NAME}_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
-    #dkp_install_assets(${EXAMPLE_NAME}_romfs DESTINATION shaders TARGETS imgui_vsh imgui_fsh)
+    dkp_install_assets(${EXAMPLE_NAME}_romfs DESTINATION shaders TARGETS ${EXAMPLE_NAME}_main_vsh ${EXAMPLE_NAME}_main_fsh)
 
     nx_generate_nacp(${EXAMPLE_NAME}.nacp NAME ${EXAMPLE_NAME} AUTHOR ${PROJECT_AUTHOR})
     nx_create_nro(${EXAMPLE_NAME} NACP ${EXAMPLE_NAME}.nacp ROMFS ${EXAMPLE_NAME}_romfs)
