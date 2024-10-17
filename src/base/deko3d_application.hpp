@@ -14,8 +14,8 @@ protected:
     dk::UniqueDevice device;
     dk::UniqueQueue queue;
 
-    dk::MemBlock dataMemblock;
-    dk::MemBlock imagesMemblock;
+    dk::MemBlock dataMemBlock;
+    dk::MemBlock imagesMemBlock;
 
     dk::Image framebuffers[FRAMEBUFFER_COUNT];
     DkCmdList framebufferCmdlists[FRAMEBUFFER_COUNT];
@@ -35,4 +35,8 @@ protected:
 private:
     void createFramebuffers();
     void destroyFramebuffers();
+
+protected:
+    // Helpers
+    void loadShader(const char *path, DkMemBlock codeMemBlock, u32 memOffset, dk::Shader& shader, u32& codeSize);
 };

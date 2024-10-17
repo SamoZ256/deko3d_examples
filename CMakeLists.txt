@@ -37,10 +37,10 @@ function(ADD_EXAMPLE)
     set(ASSETS "")
 
     foreach(SHADER_NAME IN LISTS ADD_EXAMPLE_SHADER_NAMES)
-        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
-        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
+        nx_add_shader_program(${SHADER_NAME}_vsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
+        nx_add_shader_program(${SHADER_NAME}_fsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
 
-        set(ASSETS ${ASSETS} ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh)
+        set(ASSETS ${ASSETS} ${SHADER_NAME}_vsh ${SHADER_NAME}_fsh)
     endforeach()
 
     dkp_add_asset_target(${ADD_EXAMPLE_EXAMPLE_NAME}_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
