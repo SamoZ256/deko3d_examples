@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include <switch.h>
 
 template<typename T>

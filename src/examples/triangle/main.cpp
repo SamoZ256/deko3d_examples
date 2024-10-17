@@ -14,6 +14,7 @@ protected:
 
         // Upload vertex data
         vertexBufferOffset = dataMemBlock.allocate(sizeof(VERTEX_DATA));
+        memcpy((u8*)dataMemBlock.getCpuAddr() + vertexBufferOffset, VERTEX_DATA.data(), sizeof(VERTEX_DATA));
 
         // Record the static command lists
         recordStaticCommands();
@@ -63,11 +64,28 @@ private:
     DkCmdList renderCmdlist;
 
     void recordStaticCommands() {
-        // Set scissors
+        dk::RasterizerState rasterizerState;
+        dk::ColorState colorState;
+        dk::ColorWriteState colorWriteState;
+
+        // Configure viewport and scissor
+        cmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
         cmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
 
         // Clear the color buffer
-        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 1.0f);
+        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        // Bind state required for drawing the triangle
+        cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
+        cmdbuf.bindRasterizerState(rasterizerState);
+        cmdbuf.bindColorState(colorState);
+        cmdbuf.bindColorWriteState(colorWriteState);
+        cmdbuf.bindVtxBuffer(0, dataMemBlock.getGpuAddr() + vertexBufferOffset, sizeof(VERTEX_DATA));
+        cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
+        cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
+
+        // Draw the triangle
+        cmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);
 
         renderCmdlist = cmdbuf.finishList();
     }

@@ -21,7 +21,8 @@ private:
     DkCmdList renderCmdlist;
 
     void recordStaticCommands() {
-        // Set scissors
+        // Configure viewport and scissor
+        cmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
         cmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
 
         // Clear the color buffer

@@ -12,6 +12,10 @@ public:
 
     u32 allocate(u32 size);
 
+    DkGpuAddr getGpuAddr() {
+        return memBlock.getGpuAddr();
+    }
+
     void* getCpuAddr() {
         return memBlock.getCpuAddr();
     }

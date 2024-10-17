@@ -10,7 +10,7 @@ void Deko3DApplicationBase::initialize() {
     queue = dk::QueueMaker{device}.setFlags(DkQueueFlags_Graphics).create();
 
     // Create memory block for images
-    dataMemBlock.initialize(device, 11 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
+    dataMemBlock.initialize(device, 8 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
     imagesMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
 
     // Create the static command buffer and feed it freshly allocated memory
