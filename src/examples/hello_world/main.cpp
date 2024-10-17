@@ -3,12 +3,11 @@
 #include <iostream>
 
 class HelloWorldApp : public Application {
-public:
 protected:
     void initialize() override {
         consoleInit(NULL);
 
-        printf("Hello, World!\n");
+        std::cout << "Hello, World!" << std::endl;
     }
 
     void deinitialize() override {
