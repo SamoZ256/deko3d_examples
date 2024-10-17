@@ -10,6 +10,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
 endif()
 
+set(SWITCH_INCLUDE_DIRS ${DEVKITPRO}/portlibs/switch/include)
+set(SWITCH_LIBRARIES $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
+
+add_library(example_base STATIC src/base/application.cpp)
+target_include_directories(example_base PUBLIC ${SWITCH_INCLUDE_DIRS})
+target_link_libraries(example_base PUBLIC ${SWITCH_LIBRARIES})
+
 function(ADD_EXAMPLE)
     set(options)
     set(oneValueArgs EXAMPLE_NAME)
@@ -20,9 +27,8 @@ function(ADD_EXAMPLE)
 
     target_compile_features(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC cxx_std_17)
 
-    target_link_libraries(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
-    target_include_directories(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC
-    ${DEVKITPRO}/portlibs/switch/include src)
+    target_include_directories(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC ${SWITCH_INCLUDE_DIRS} src)
+    target_link_libraries(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC ${SWITCH_LIBRARIES} example_base)
 
     set(ASSETS "")
 
