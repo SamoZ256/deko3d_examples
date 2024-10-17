@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-class HelloWorldApp : public Application {
+class HelloWorldApp : public ApplicationBase {
 protected:
     void initialize() override {
         consoleInit(NULL);
@@ -16,9 +16,6 @@ protected:
 
     void update() override {
         consoleUpdate(NULL);
-    }
-
-    void render() override {
     }
 };
 

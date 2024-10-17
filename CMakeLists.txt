@@ -13,7 +13,11 @@ endif()
 set(SWITCH_INCLUDE_DIRS ${DEVKITPRO}/portlibs/switch/include)
 set(SWITCH_LIBRARIES $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
 
-add_library(example_base STATIC src/base/application.cpp)
+add_library(example_base STATIC
+    src/base/application.cpp
+    src/base/deko3d_application.cpp
+)
+
 target_include_directories(example_base PUBLIC ${SWITCH_INCLUDE_DIRS})
 target_link_libraries(example_base PUBLIC ${SWITCH_LIBRARIES})
 

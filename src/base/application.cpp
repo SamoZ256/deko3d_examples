@@ -1,14 +1,14 @@
 #include "application.hpp"
 
-Application::Application() {
+ApplicationBase::ApplicationBase() {
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&pad);
 }
 
-Application::~Application() {
+ApplicationBase::~ApplicationBase() {
 }
 
-void Application::run() {
+void ApplicationBase::run() {
     initialize();
 
     while (appletMainLoop()) {
@@ -19,7 +19,6 @@ void Application::run() {
         }
 
         update();
-        render();
     }
 
     deinitialize();

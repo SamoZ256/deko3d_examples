@@ -2,10 +2,10 @@
 
 #include <switch.h>
 
-class Application {
+class ApplicationBase {
 public:
-    Application();
-    ~Application();
+    ApplicationBase();
+    ~ApplicationBase();
 
     void run();
 
@@ -15,5 +15,4 @@ protected:
     virtual void initialize() = 0;
     virtual void deinitialize() = 0;
     virtual void update() = 0;
-    virtual void render() = 0;
 };
