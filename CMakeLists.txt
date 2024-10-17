@@ -16,19 +16,19 @@ function(ADD_EXAMPLE)
     set(multiValueArgs SHADER_NAMES)
     cmake_parse_arguments(ADD_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    add_executable(${ADD_EXAMPLE_EXAMPLE_NAME} src/${ADD_EXAMPLE_EXAMPLE_NAME}/main.cpp)
+    add_executable(${ADD_EXAMPLE_EXAMPLE_NAME} src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/main.cpp)
 
     target_compile_features(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC cxx_std_17)
 
     target_link_libraries(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC $<IF:$<CONFIG:Debug>,deko3dd,deko3d>)
     target_include_directories(${ADD_EXAMPLE_EXAMPLE_NAME} PUBLIC
-    ${DEVKITPRO}/portlibs/switch/include)
+    ${DEVKITPRO}/portlibs/switch/include src)
 
     set(ASSETS "")
 
     foreach(SHADER_NAME IN LISTS ADD_EXAMPLE_SHADER_NAMES)
-        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh src/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
-        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh src/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
+        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
+        nx_add_shader_program(${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
 
         set(ASSETS ${ASSETS} ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_vsh ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME}_fsh)
     endforeach()
