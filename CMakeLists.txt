@@ -54,3 +54,4 @@ endfunction()
 
 ADD_EXAMPLE(EXAMPLE_NAME hello_world)
 ADD_EXAMPLE(EXAMPLE_NAME clear_color)
+ADD_EXAMPLE(EXAMPLE_NAME triangle SHADER_NAMES main)
