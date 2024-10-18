@@ -13,8 +13,8 @@ protected:
         loadShader("romfs:/shaders/main_fsh.dksh", codeMemBlock, fragmentShader);
 
         // Upload vertex data
-        vertexBufferOffset = dataMemBlock.allocate(sizeof(VERTEX_DATA));
-        memcpy((u8*)dataMemBlock.getCpuAddr() + vertexBufferOffset, VERTEX_DATA.data(), sizeof(VERTEX_DATA));
+        vertexBufferMem = dataMemBlock.allocate(sizeof(VERTEX_DATA), alignof(Vertex));
+        memcpy((u8*)vertexBufferMem.getCpuAddr(), VERTEX_DATA.data(), sizeof(VERTEX_DATA));
 
         // Record the static command lists
         recordStaticCommands();
@@ -59,7 +59,7 @@ private:
     dk::Shader vertexShader;
     dk::Shader fragmentShader;
 
-    u32 vertexBufferOffset;
+    MemoryAllocation vertexBufferMem;
 
     DkCmdList renderCmdlist;
 
@@ -80,7 +80,7 @@ private:
         cmdbuf.bindRasterizerState(rasterizerState);
         cmdbuf.bindColorState(colorState);
         cmdbuf.bindColorWriteState(colorWriteState);
-        cmdbuf.bindVtxBuffer(0, dataMemBlock.getGpuAddr() + vertexBufferOffset, sizeof(VERTEX_DATA));
+        cmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
         cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
         cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
 

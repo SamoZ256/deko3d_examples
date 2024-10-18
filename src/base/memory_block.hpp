@@ -4,13 +4,25 @@
 
 #include <deko3d.hpp>
 
-// TODO: Implement a proper memory allocator
+struct MemoryAllocation {
+    class MemoryBlock* memBlock;
+    u32 offset;
+    u32 size;
+
+    DkGpuAddr getGpuAddr();
+
+    void* getCpuAddr();
+
+    // Getters
+    dk::MemBlock& getNativeHandle();
+};
+
 class MemoryBlock {
 public:
     void initialize(dk::UniqueDevice& device, u32 size, int flags);
     void destroy();
 
-    u32 allocate(u32 size);
+    MemoryAllocation allocate(u32 size, u32 alignment);
 
     DkGpuAddr getGpuAddr() {
         return memBlock.getGpuAddr();
@@ -21,10 +33,12 @@ public:
     }
 
     // Getters
-    dk::MemBlock& getMemBlock() { return memBlock; }
+    dk::MemBlock& getNativeHandle() { return memBlock; }
 
 private:
     dk::MemBlock memBlock;
 
     u32 offset = 0;
 };
+
+// TODO: Implement a proper memory allocator

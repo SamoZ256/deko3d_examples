@@ -13,9 +13,10 @@ void Deko3DApplicationBase::initialize() {
     dataMemBlock.initialize(device, 8 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
     imagesMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
 
-    // Create the static command buffer and feed it freshly allocated memory
+    // Create the static command buffer
     cmdbuf = dk::CmdBufMaker{device}.create();
-    cmdbuf.addMemory(dataMemBlock.getMemBlock(), dataMemBlock.allocate(STATIC_CMDBUF_SIZE), STATIC_CMDBUF_SIZE);
+    auto cmdbufMem = dataMemBlock.allocate(STATIC_CMDBUF_SIZE, DK_CMDMEM_ALIGNMENT);
+    cmdbuf.addMemory(cmdbufMem.getNativeHandle(), cmdbufMem.offset, cmdbufMem.size);
 
     createFramebuffers();
 
@@ -58,10 +59,10 @@ void Deko3DApplicationBase::createFramebuffers() {
     std::array<DkImage const*, FRAMEBUFFER_COUNT> fbArray;
     u64 fbSize  = layoutFramebuffer.getSize();
     u64 fbAlign = layoutFramebuffer.getAlignment();
-    fbSize = align(fbSize, fbAlign);
     for (unsigned i = 0; i < FRAMEBUFFER_COUNT; i++) {
         // Allocate a framebuffer
-        framebuffers[i].initialize(layoutFramebuffer, imagesMemBlock.getMemBlock(), imagesMemBlock.allocate(fbSize));
+        auto fbMem = imagesMemBlock.allocate(fbSize, fbAlign);
+        framebuffers[i].initialize(layoutFramebuffer, fbMem.getNativeHandle(), fbMem.offset);
 
         // Generate a command list that binds it
         dk::ImageView colorTarget{ framebuffers[i] };
@@ -93,11 +94,11 @@ void Deko3DApplicationBase::loadShader(const char *path, MemoryBlock& codeMemBlo
     u32 size = ftell(f);
     rewind(f);
 
-    size_t offset = codeMemBlock.allocate(align(size, (u32)DK_SHADER_CODE_ALIGNMENT));
+    auto codeMem = codeMemBlock.allocate(size, DK_SHADER_CODE_ALIGNMENT);
 
-    fread((char*)codeMemBlock.getCpuAddr() + offset, size, 1, f);
+    fread(codeMem.getCpuAddr(), size, 1, f);
     fclose(f);
 
     // Create the shader
-    dk::ShaderMaker(codeMemBlock.getMemBlock(), offset).initialize(shader);
+    dk::ShaderMaker(codeMem.getNativeHandle(), codeMem.offset).initialize(shader);
 }
