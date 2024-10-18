@@ -22,6 +22,10 @@ add_library(example_base STATIC
 target_include_directories(example_base PUBLIC ${SWITCH_INCLUDE_DIRS})
 target_link_libraries(example_base PUBLIC ${SWITCH_LIBRARIES})
 
+function(ADD_SHADER NAME TYPE)
+    nx_add_shader_program(${NAME} src/examples/shaders/${NAME}.glsl ${TYPE})
+endfunction()
+
 function(ADD_EXAMPLE)
     set(options)
     set(oneValueArgs EXAMPLE_NAME)
@@ -38,11 +42,7 @@ function(ADD_EXAMPLE)
     set(ASSETS "")
 
     foreach(SHADER_NAME IN LISTS ADD_EXAMPLE_SHADER_NAMES)
-        set(SHADER_BASE ${ADD_EXAMPLE_EXAMPLE_NAME}_${SHADER_NAME})
-        nx_add_shader_program(${SHADER_BASE}_vsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_vsh.glsl vert)
-        nx_add_shader_program(${SHADER_BASE}_fsh src/examples/${ADD_EXAMPLE_EXAMPLE_NAME}/shaders/${SHADER_NAME}_fsh.glsl frag)
-
-        set(ASSETS ${ASSETS} ${SHADER_BASE}_vsh ${SHADER_BASE}_fsh)
+        set(ASSETS ${ASSETS} ${SHADER_NAME})
     endforeach()
 
     dkp_add_asset_target(${ADD_EXAMPLE_EXAMPLE_NAME}_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
@@ -54,7 +54,10 @@ function(ADD_EXAMPLE)
     nx_create_nro(${ADD_EXAMPLE_EXAMPLE_NAME} NACP ${ADD_EXAMPLE_EXAMPLE_NAME}.nacp ROMFS ${ADD_EXAMPLE_EXAMPLE_NAME}_romfs)
 endfunction()
 
+ADD_SHADER(main_vsh vert)
+ADD_SHADER(main_fsh frag)
+
 ADD_EXAMPLE(EXAMPLE_NAME 0_hello_world)
 ADD_EXAMPLE(EXAMPLE_NAME 1_clear_color)
-ADD_EXAMPLE(EXAMPLE_NAME 2_triangle SHADER_NAMES main)
-ADD_EXAMPLE(EXAMPLE_NAME 3_texture SHADER_NAMES main)
+ADD_EXAMPLE(EXAMPLE_NAME 2_triangle SHADER_NAMES main_vsh main_fsh)
+ADD_EXAMPLE(EXAMPLE_NAME 3_texture SHADER_NAMES main_vsh main_fsh)
