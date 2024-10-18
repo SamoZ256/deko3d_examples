@@ -9,8 +9,8 @@ protected:
         codeMemBlock.initialize(device, 128 * 1024 * 16, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code);
 
         // Create shaders
-        loadShader("romfs:/shaders/main_vsh.dksh", codeMemBlock, vertexShader);
-        loadShader("romfs:/shaders/main_fsh.dksh", codeMemBlock, fragmentShader);
+        loadShader("romfs:/shaders/texture_vsh.dksh", codeMemBlock, vertexShader);
+        loadShader("romfs:/shaders/texture_fsh.dksh", codeMemBlock, fragmentShader);
 
         // Upload vertex data
         vertexBufferMem = dataMemBlock.allocate(sizeof(VERTEX_DATA), alignof(Vertex));
@@ -33,13 +33,13 @@ private:
     struct Vertex
     {
         float position[3];
-        float color[3];
+        float texCoord[2];
     };
 
     static constexpr std::array VERTEX_ATTRIB_STATE =
     {
         DkVtxAttribState{ 0, 0, offsetof(Vertex, position), DkVtxAttribSize_3x32, DkVtxAttribType_Float, 0 },
-        DkVtxAttribState{ 0, 0, offsetof(Vertex, color),    DkVtxAttribSize_3x32, DkVtxAttribType_Float, 0 },
+        DkVtxAttribState{ 0, 0, offsetof(Vertex, texCoord), DkVtxAttribSize_2x32, DkVtxAttribType_Float, 0 },
     };
 
     static constexpr std::array VERTEX_BUFFER_STATE =
@@ -49,9 +49,10 @@ private:
 
     static constexpr std::array VERTEX_DATA =
     {
-        Vertex{ {  0.0f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-        Vertex{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-        Vertex{ {  0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+        Vertex{ { -0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f } },
+        Vertex{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f } },
+        Vertex{ {  0.5f,  0.5f, 0.0f }, { 1.0f, 1.0f } },
+        Vertex{ {  0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f } },
     };
 
     MemoryBlock codeMemBlock;
@@ -75,7 +76,7 @@ private:
         // Clear the color buffer
         cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
 
-        // Bind state required for drawing the triangle
+        // Bind state
         cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
         cmdbuf.bindRasterizerState(rasterizerState);
         cmdbuf.bindColorState(colorState);
@@ -84,8 +85,8 @@ private:
         cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
         cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
 
-        // Draw the triangle
-        cmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);
+        // Draw quad
+        cmdbuf.draw(DkPrimitive_TriangleStrip, VERTEX_DATA.size(), 1, 0, 0);
 
         renderCmdlist = cmdbuf.finishList();
     }

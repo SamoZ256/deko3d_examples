@@ -9,8 +9,8 @@ protected:
         codeMemBlock.initialize(device, 128 * 1024 * 16, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code);
 
         // Create shaders
-        loadShader("romfs:/shaders/main_vsh.dksh", codeMemBlock, vertexShader);
-        loadShader("romfs:/shaders/main_fsh.dksh", codeMemBlock, fragmentShader);
+        loadShader("romfs:/shaders/color_vsh.dksh", codeMemBlock, vertexShader);
+        loadShader("romfs:/shaders/color_fsh.dksh", codeMemBlock, fragmentShader);
 
         // Upload vertex data
         vertexBufferMem = dataMemBlock.allocate(sizeof(VERTEX_DATA), alignof(Vertex));
@@ -75,7 +75,7 @@ private:
         // Clear the color buffer
         cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
 
-        // Bind state required for drawing the triangle
+        // Bind state
         cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
         cmdbuf.bindRasterizerState(rasterizerState);
         cmdbuf.bindColorState(colorState);
@@ -84,7 +84,7 @@ private:
         cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
         cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
 
-        // Draw the triangle
+        // Draw triangle
         cmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);
 
         renderCmdlist = cmdbuf.finishList();
