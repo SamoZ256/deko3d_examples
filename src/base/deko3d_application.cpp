@@ -107,7 +107,7 @@ void Deko3DApplicationBase::loadShader(const char* path, MemoryBlock& codeMemBlo
     loadShader(codeMem, shader);
 }
 
-DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, MemoryAllocation& imageMem, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
+DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
     // Create layout
     dk::ImageLayout layout;
     dk::ImageLayoutMaker{device}
@@ -117,6 +117,7 @@ DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, Memor
         .initialize(layout);
 
     // Create image
+    auto imageMem = imageMemBlock.allocate(layout.getSize(), layout.getAlignment());
     image.initialize(layout, imageMem.getNativeHandle(), imageMem.offset);
 
     // Copy from scratch buffer to image
@@ -125,6 +126,23 @@ DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, Memor
                              {0, 0, 0, u32(width), u32(height), 1});
 
     return cmdbuf.finishList();
+}
+
+DkCmdList Deko3DApplicationBase::loadTexture(void* data, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
+    // TODO: remove this?
+    // Create layout
+    dk::ImageLayout layout;
+    dk::ImageLayoutMaker{device}
+        .setFlags(0)
+        .setFormat(format)
+        .setDimensions(width, height)
+        .initialize(layout);
+
+    // Copy the data to scratch memory
+    auto scratchMem = scratchMemBlock.allocate(layout.getSize());
+    memcpy(scratchMem.getCpuAddr(), data, layout.getSize());
+
+    return loadTexture(scratchMem, imageMemBlock, cmdbuf, width, height, format, image);
 }
 
 DkCmdList Deko3DApplicationBase::loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image) {

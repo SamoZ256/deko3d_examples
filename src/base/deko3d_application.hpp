@@ -41,6 +41,7 @@ protected:
     // Helpers
     void loadShader(MemoryAllocation& codeMem, dk::Shader& shader);
     void loadShader(const char* path, MemoryBlock& codeMemBlock, dk::Shader& shader);
-    DkCmdList loadTexture(MemoryAllocation& scratchMem, MemoryAllocation& imageMem, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image);
+    DkCmdList loadTexture(MemoryAllocation& scratchMem, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image);
+    DkCmdList loadTexture(void* data, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image);
     DkCmdList loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image);
 };

@@ -22,7 +22,7 @@ public:
     void initialize(dk::UniqueDevice& device, u32 size, int flags);
     void destroy();
 
-    MemoryAllocation allocate(u32 size, u32 alignment);
+    MemoryAllocation allocate(u32 size, u32 alignment = 4); // TODO: what should the default alignment be?
 
     DkGpuAddr getGpuAddr() {
         return memBlock.getGpuAddr();

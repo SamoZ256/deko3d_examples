@@ -28,14 +28,28 @@ protected:
         tmpCmdbuf.addMemory(cmdbufMem.getNativeHandle(), cmdbufMem.offset, cmdbufMem.size);
 
         // Create textures
-        //loadTexture(TODO);
+        u8 textureData[TEXTURE_HEIGHT][TEXTURE_WIDTH][4];
+        for (u32 y = 0; y < TEXTURE_HEIGHT; y++) {
+            for (u32 x = 0; x < TEXTURE_WIDTH; x++) {
+                textureData[y][x][0] = (x * 255) / (TEXTURE_WIDTH - 1);
+                textureData[y][x][1] = (y * 255) / (TEXTURE_HEIGHT - 1);
+                textureData[y][x][2] = rand() % 256;
+                textureData[y][x][3] = 255;
+            }
+        }
+        loadTexture(textureData, scratchMemBlock, imagesMemBlock, tmpCmdbuf, TEXTURE_WIDTH, TEXTURE_HEIGHT, DkImageFormat_RGBA8_Unorm, image.image);
+        auto imageDescriptorMem = dataMemBlock.allocate(sizeof(dk::ImageDescriptor), alignof(dk::ImageDescriptor));
+        image.imageDescriptor = static_cast<dk::ImageDescriptor*>(imageDescriptorMem.getCpuAddr());
+        image.imageDescriptor->initialize(image.image);
 
         // Create samplers
-        //samplerDescriptor->initialize(
-        //    dk::Sampler{}
-        //        .setFilter(DkFilter_Linear, DkFilter_Linear)
-        //        .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge,
-        //                     DkWrapMode_ClampToEdge));
+        auto samplerDescriptorMem = dataMemBlock.allocate(sizeof(dk::SamplerDescriptor), alignof(dk::SamplerDescriptor));
+        samplerDescriptor = static_cast<dk::SamplerDescriptor*>(samplerDescriptorMem.getCpuAddr());
+        samplerDescriptor->initialize(
+            dk::Sampler{}
+                .setFilter(DkFilter_Linear, DkFilter_Linear)
+                .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge,
+                             DkWrapMode_ClampToEdge));
 
         // Wait for the queue to be idle
         queue.waitIdle();
@@ -60,6 +74,8 @@ protected:
 
 private:
     static constexpr u32 TMP_CMDBUF_SIZE = 0x1000;
+    static constexpr u32 TEXTURE_WIDTH = 8;
+    static constexpr u32 TEXTURE_HEIGHT = 8;
 
     struct Vertex
     {
@@ -91,6 +107,9 @@ private:
 
     dk::Shader vertexShader;
     dk::Shader fragmentShader;
+
+    Image image;
+    dk::SamplerDescriptor* samplerDescriptor;
 
     MemoryAllocation vertexBufferMem;
 

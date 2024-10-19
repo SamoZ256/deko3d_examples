@@ -8,8 +8,12 @@ ApplicationBase::ApplicationBase() {
     nxlinkStdio();
 #endif
 
+    // Initialize the controller
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&pad);
+
+    // Random
+    srand(time(NULL));
 }
 
 ApplicationBase::~ApplicationBase() {
