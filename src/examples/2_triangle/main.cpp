@@ -69,25 +69,25 @@ private:
         dk::ColorWriteState colorWriteState;
 
         // Configure viewport and scissor
-        cmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
-        cmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
+        mainCmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
+        mainCmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
 
         // Clear the color buffer
-        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+        mainCmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
 
         // Bind state
-        cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
-        cmdbuf.bindRasterizerState(rasterizerState);
-        cmdbuf.bindColorState(colorState);
-        cmdbuf.bindColorWriteState(colorWriteState);
-        cmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
-        cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
-        cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
+        mainCmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
+        mainCmdbuf.bindRasterizerState(rasterizerState);
+        mainCmdbuf.bindColorState(colorState);
+        mainCmdbuf.bindColorWriteState(colorWriteState);
+        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
+        mainCmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
+        mainCmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
 
         // Draw triangle
-        cmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);
+        mainCmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);
 
-        renderCmdlist = cmdbuf.finishList();
+        renderCmdlist = mainCmdbuf.finishList();
     }
 };
 

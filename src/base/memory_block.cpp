@@ -13,7 +13,7 @@ dk::MemBlock& MemoryAllocation::getNativeHandle() {
 }
 
 void MemoryBlock::initialize(dk::UniqueDevice& device, u32 size, int flags) {
-    memBlock = dk::MemBlockMaker{device, size}.setFlags(flags).create();
+    memBlock = dk::MemBlockMaker{device, align(size, (u32)DK_MEMBLOCK_ALIGNMENT)}.setFlags(flags).create();
 }
 
 void MemoryBlock::destroy() {

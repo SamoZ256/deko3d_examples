@@ -2,11 +2,17 @@
 
 #include <deko3d.hpp>
 
+struct Image {
+    dk::Image image;
+    dk::ImageDescriptor* imageDescriptor;
+};
+
 class TextureApp : public Deko3DApplicationBase {
 protected:
     void initializeDeko3DObjects() override {
         // Create memory blocks
         codeMemBlock.initialize(device, 128 * 1024 * 16, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code);
+        scratchMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
 
         // Create shaders
         loadShader("romfs:/shaders/texture_vsh.dksh", codeMemBlock, vertexShader);
@@ -15,6 +21,29 @@ protected:
         // Upload vertex data
         vertexBufferMem = dataMemBlock.allocate(sizeof(VERTEX_DATA), alignof(Vertex));
         memcpy((u8*)vertexBufferMem.getCpuAddr(), VERTEX_DATA.data(), sizeof(VERTEX_DATA));
+
+        // Temporary command buffer
+        auto cmdbufMem = dataMemBlock.allocate(TMP_CMDBUF_SIZE, DK_CMDMEM_ALIGNMENT);
+        dk::UniqueCmdBuf tmpCmdbuf = dk::CmdBufMaker{device}.create();
+        tmpCmdbuf.addMemory(cmdbufMem.getNativeHandle(), cmdbufMem.offset, cmdbufMem.size);
+
+        // Create textures
+        //loadTexture(TODO);
+
+        // Create samplers
+        //samplerDescriptor->initialize(
+        //    dk::Sampler{}
+        //        .setFilter(DkFilter_Linear, DkFilter_Linear)
+        //        .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge,
+        //                     DkWrapMode_ClampToEdge));
+
+        // Wait for the queue to be idle
+        queue.waitIdle();
+
+        // Free scratch memory
+        scratchMemBlock.destroy();
+
+        tmpCmdbuf.clear();
 
         // Record the static command lists
         recordStaticCommands();
@@ -30,6 +59,8 @@ protected:
     }
 
 private:
+    static constexpr u32 TMP_CMDBUF_SIZE = 0x1000;
+
     struct Vertex
     {
         float position[3];
@@ -56,6 +87,7 @@ private:
     };
 
     MemoryBlock codeMemBlock;
+    MemoryBlock scratchMemBlock;
 
     dk::Shader vertexShader;
     dk::Shader fragmentShader;
@@ -70,25 +102,25 @@ private:
         dk::ColorWriteState colorWriteState;
 
         // Configure viewport and scissor
-        cmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
-        cmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
+        mainCmdbuf.setViewports(0, { { 0.0f, 0.0f, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, 0.0f, 1.0f } });
+        mainCmdbuf.setScissors(0, { { 0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT } });
 
         // Clear the color buffer
-        cmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
+        mainCmdbuf.clearColor(0, DkColorMask_RGBA, 0.0f, 0.0f, 0.0f, 0.0f);
 
         // Bind state
-        cmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
-        cmdbuf.bindRasterizerState(rasterizerState);
-        cmdbuf.bindColorState(colorState);
-        cmdbuf.bindColorWriteState(colorWriteState);
-        cmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
-        cmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
-        cmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
+        mainCmdbuf.bindShaders(DkStageFlag_GraphicsMask, { &vertexShader, &fragmentShader });
+        mainCmdbuf.bindRasterizerState(rasterizerState);
+        mainCmdbuf.bindColorState(colorState);
+        mainCmdbuf.bindColorWriteState(colorWriteState);
+        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
+        mainCmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
+        mainCmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
 
         // Draw quad
-        cmdbuf.draw(DkPrimitive_TriangleStrip, VERTEX_DATA.size(), 1, 0, 0);
+        mainCmdbuf.draw(DkPrimitive_TriangleStrip, VERTEX_DATA.size(), 1, 0, 0);
 
-        renderCmdlist = cmdbuf.finishList();
+        renderCmdlist = mainCmdbuf.finishList();
     }
 };
 

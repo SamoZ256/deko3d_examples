@@ -7,10 +7,10 @@
 
 class Deko3DApplicationBase : public ApplicationBase {
 protected:
-    static constexpr unsigned FRAMEBUFFER_COUNT = 2;
-    static constexpr uint32_t FRAMEBUFFER_WIDTH = 1280;
-    static constexpr uint32_t FRAMEBUFFER_HEIGHT = 720;
-    static constexpr unsigned STATIC_CMDBUF_SIZE = 0x1000;
+    static constexpr u32 FRAMEBUFFER_COUNT = 2;
+    static constexpr u32 FRAMEBUFFER_WIDTH = 1280;
+    static constexpr u32 FRAMEBUFFER_HEIGHT = 720;
+    static constexpr u32 STATIC_CMDBUF_SIZE = 0x1000;
 
     dk::UniqueDevice device;
     dk::UniqueQueue queue;
@@ -23,7 +23,7 @@ protected:
 
     dk::UniqueSwapchain swapchain;
 
-    dk::UniqueCmdBuf cmdbuf;
+    dk::UniqueCmdBuf mainCmdbuf;
 
     void initialize() override;
     void deinitialize() override;
@@ -39,5 +39,8 @@ private:
 
 protected:
     // Helpers
-    void loadShader(const char *path, MemoryBlock& codeMemBlock, dk::Shader& shader);
+    void loadShader(MemoryAllocation& codeMem, dk::Shader& shader);
+    void loadShader(const char* path, MemoryBlock& codeMemBlock, dk::Shader& shader);
+    DkCmdList loadTexture(MemoryAllocation& scratchMem, MemoryAllocation& imageMem, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image);
+    DkCmdList loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image);
 };

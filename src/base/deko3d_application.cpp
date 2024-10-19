@@ -14,9 +14,9 @@ void Deko3DApplicationBase::initialize() {
     imagesMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
 
     // Create the static command buffer
-    cmdbuf = dk::CmdBufMaker{device}.create();
     auto cmdbufMem = dataMemBlock.allocate(STATIC_CMDBUF_SIZE, DK_CMDMEM_ALIGNMENT);
-    cmdbuf.addMemory(cmdbufMem.getNativeHandle(), cmdbufMem.offset, cmdbufMem.size);
+    mainCmdbuf = dk::CmdBufMaker{device}.create();
+    mainCmdbuf.addMemory(cmdbufMem.getNativeHandle(), cmdbufMem.offset, cmdbufMem.size);
 
     createFramebuffers();
 
@@ -66,8 +66,8 @@ void Deko3DApplicationBase::createFramebuffers() {
 
         // Generate a command list that binds it
         dk::ImageView colorTarget{ framebuffers[i] };
-        cmdbuf.bindRenderTargets(&colorTarget);
-        framebufferCmdlists[i] = cmdbuf.finishList();
+        mainCmdbuf.bindRenderTargets(&colorTarget);
+        framebufferCmdlists[i] = mainCmdbuf.finishList();
 
         // Fill in the array for use later by the swapchain creation code
         fbArray[i] = &framebuffers[i];
@@ -82,12 +82,16 @@ void Deko3DApplicationBase::destroyFramebuffers() {
     queue.waitIdle();
 
     // Clear the command buffer (also destroys the command lists)
-    cmdbuf.clear();
+    mainCmdbuf.clear();
 
     swapchain.destroy();
 }
 
-void Deko3DApplicationBase::loadShader(const char *path, MemoryBlock& codeMemBlock, dk::Shader& shader) {
+void Deko3DApplicationBase::loadShader(MemoryAllocation& codeMem, dk::Shader& shader) {
+    dk::ShaderMaker(codeMem.getNativeHandle(), codeMem.offset).initialize(shader);
+}
+
+void Deko3DApplicationBase::loadShader(const char* path, MemoryBlock& codeMemBlock, dk::Shader& shader) {
     // Load the shader from file
     FILE* f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
@@ -100,5 +104,30 @@ void Deko3DApplicationBase::loadShader(const char *path, MemoryBlock& codeMemBlo
     fclose(f);
 
     // Create the shader
-    dk::ShaderMaker(codeMem.getNativeHandle(), codeMem.offset).initialize(shader);
+    loadShader(codeMem, shader);
+}
+
+DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, MemoryAllocation& imageMem, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
+    // Create layout
+    dk::ImageLayout layout;
+    dk::ImageLayoutMaker{device}
+        .setFlags(0)
+        .setFormat(format)
+        .setDimensions(width, height)
+        .initialize(layout);
+
+    // Create image
+    image.initialize(layout, imageMem.getNativeHandle(), imageMem.offset);
+
+    // Copy from scratch buffer to image
+    cmdbuf.copyBufferToImage({scratchMem.getGpuAddr()},
+                             dk::ImageView{image},
+                             {0, 0, 0, u32(width), u32(height), 1});
+
+    return cmdbuf.finishList();
+}
+
+DkCmdList Deko3DApplicationBase::loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image) {
+    // TODO: implement
+    throw;
 }
