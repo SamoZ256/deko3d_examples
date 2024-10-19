@@ -80,9 +80,9 @@ private:
         mainCmdbuf.bindRasterizerState(rasterizerState);
         mainCmdbuf.bindColorState(colorState);
         mainCmdbuf.bindColorWriteState(colorWriteState);
-        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
         mainCmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
         mainCmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
+        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
 
         // Draw triangle
         mainCmdbuf.draw(DkPrimitive_Triangles, VERTEX_DATA.size(), 1, 0, 0);

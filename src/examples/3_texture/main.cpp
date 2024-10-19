@@ -2,9 +2,39 @@
 
 #include <deko3d.hpp>
 
+struct ImageDescriptor {
+    dk::ImageDescriptor* imageDescriptor;
+    DkGpuAddr gpuAddr;
+
+    void initialize(MemoryAllocation& mem, const dk::ImageView& imageView) {
+        imageDescriptor = static_cast<dk::ImageDescriptor*>(mem.getCpuAddr());
+        imageDescriptor->initialize(imageView);
+        gpuAddr = mem.getGpuAddr();
+    }
+
+    void bind(dk::UniqueCmdBuf& cmdbuf) {
+        cmdbuf.bindImageDescriptorSet(gpuAddr, 1);
+    }
+};
+
+struct SamplerDescriptor {
+    dk::SamplerDescriptor* samplerDescriptor;
+    DkGpuAddr gpuAddr;
+
+    void initialize(MemoryAllocation& mem, const dk::Sampler& sampler) {
+        samplerDescriptor = static_cast<dk::SamplerDescriptor*>(mem.getCpuAddr());
+        samplerDescriptor->initialize(sampler);
+        gpuAddr = mem.getGpuAddr();
+    }
+
+    void bind(dk::UniqueCmdBuf& cmdbuf) {
+        cmdbuf.bindSamplerDescriptorSet(gpuAddr, 1);
+    }
+};
+
 struct Image {
     dk::Image image;
-    dk::ImageDescriptor* imageDescriptor;
+    ImageDescriptor imageDescriptor;
 };
 
 class TextureApp : public Deko3DApplicationBase {
@@ -31,25 +61,28 @@ protected:
         u8 textureData[TEXTURE_HEIGHT][TEXTURE_WIDTH][4];
         for (u32 y = 0; y < TEXTURE_HEIGHT; y++) {
             for (u32 x = 0; x < TEXTURE_WIDTH; x++) {
-                textureData[y][x][0] = (x * 255) / (TEXTURE_WIDTH - 1);
-                textureData[y][x][1] = (y * 255) / (TEXTURE_HEIGHT - 1);
+                textureData[y][x][0] = rand() % 256;
+                textureData[y][x][1] = rand() % 256;
                 textureData[y][x][2] = rand() % 256;
                 textureData[y][x][3] = 255;
             }
         }
         loadTexture(textureData, scratchMemBlock, imagesMemBlock, tmpCmdbuf, TEXTURE_WIDTH, TEXTURE_HEIGHT, DkImageFormat_RGBA8_Unorm, image.image);
         auto imageDescriptorMem = dataMemBlock.allocate(sizeof(dk::ImageDescriptor), alignof(dk::ImageDescriptor));
-        image.imageDescriptor = static_cast<dk::ImageDescriptor*>(imageDescriptorMem.getCpuAddr());
-        image.imageDescriptor->initialize(image.image);
+        image.imageDescriptor.initialize(imageDescriptorMem, dk::ImageView{image.image});
+        image.imageDescriptor.bind(tmpCmdbuf);
 
         // Create samplers
         auto samplerDescriptorMem = dataMemBlock.allocate(sizeof(dk::SamplerDescriptor), alignof(dk::SamplerDescriptor));
-        samplerDescriptor = static_cast<dk::SamplerDescriptor*>(samplerDescriptorMem.getCpuAddr());
-        samplerDescriptor->initialize(
+        samplerDescriptor.initialize(samplerDescriptorMem,
             dk::Sampler{}
                 .setFilter(DkFilter_Linear, DkFilter_Linear)
                 .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge,
                              DkWrapMode_ClampToEdge));
+        samplerDescriptor.bind(tmpCmdbuf);
+
+        // Submit temporary commands
+        queue.submitCommands(tmpCmdbuf.finishList());
 
         // Wait for the queue to be idle
         queue.waitIdle();
@@ -74,8 +107,8 @@ protected:
 
 private:
     static constexpr u32 TMP_CMDBUF_SIZE = 0x1000;
-    static constexpr u32 TEXTURE_WIDTH = 8;
-    static constexpr u32 TEXTURE_HEIGHT = 8;
+    static constexpr u32 TEXTURE_WIDTH = 256;
+    static constexpr u32 TEXTURE_HEIGHT = 256;
 
     struct Vertex
     {
@@ -109,7 +142,7 @@ private:
     dk::Shader fragmentShader;
 
     Image image;
-    dk::SamplerDescriptor* samplerDescriptor;
+    SamplerDescriptor samplerDescriptor;
 
     MemoryAllocation vertexBufferMem;
 
@@ -132,9 +165,10 @@ private:
         mainCmdbuf.bindRasterizerState(rasterizerState);
         mainCmdbuf.bindColorState(colorState);
         mainCmdbuf.bindColorWriteState(colorWriteState);
-        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
         mainCmdbuf.bindVtxAttribState(VERTEX_ATTRIB_STATE);
         mainCmdbuf.bindVtxBufferState(VERTEX_BUFFER_STATE);
+        mainCmdbuf.bindVtxBuffer(0, vertexBufferMem.getGpuAddr(), sizeof(VERTEX_DATA));
+        mainCmdbuf.bindTextures(DkStage_Fragment, 0, dkMakeTextureHandle(0, 0));
 
         // Draw quad
         mainCmdbuf.draw(DkPrimitive_TriangleStrip, VERTEX_DATA.size(), 1, 0, 0);

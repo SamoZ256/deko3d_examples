@@ -10,8 +10,8 @@ void Deko3DApplicationBase::initialize() {
     queue = dk::QueueMaker{device}.setFlags(DkQueueFlags_Graphics).create();
 
     // Create memory block for images
-    dataMemBlock.initialize(device, 8 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
-    imagesMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
+    dataMemBlock.initialize(device, 16 * 1024 * 1024, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached);
+    imagesMemBlock.initialize(device, 32 * 1024 * 1024, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image);
 
     // Create the static command buffer
     auto cmdbufMem = dataMemBlock.allocate(STATIC_CMDBUF_SIZE, DK_CMDMEM_ALIGNMENT);
@@ -107,7 +107,7 @@ void Deko3DApplicationBase::loadShader(const char* path, MemoryBlock& codeMemBlo
     loadShader(codeMem, shader);
 }
 
-DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
+void Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
     // Create layout
     dk::ImageLayout layout;
     dk::ImageLayoutMaker{device}
@@ -123,12 +123,10 @@ DkCmdList Deko3DApplicationBase::loadTexture(MemoryAllocation& scratchMem, Memor
     // Copy from scratch buffer to image
     cmdbuf.copyBufferToImage({scratchMem.getGpuAddr()},
                              dk::ImageView{image},
-                             {0, 0, 0, u32(width), u32(height), 1});
-
-    return cmdbuf.finishList();
+                             {0, 0, 0, width, height, 1});
 }
 
-DkCmdList Deko3DApplicationBase::loadTexture(void* data, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
+void Deko3DApplicationBase::loadTexture(void* data, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, u32 width, u32 height, DkImageFormat format, dk::Image& image) {
     // TODO: remove this?
     // Create layout
     dk::ImageLayout layout;
@@ -139,13 +137,13 @@ DkCmdList Deko3DApplicationBase::loadTexture(void* data, MemoryBlock& scratchMem
         .initialize(layout);
 
     // Copy the data to scratch memory
-    auto scratchMem = scratchMemBlock.allocate(layout.getSize());
+    auto scratchMem = scratchMemBlock.allocate(layout.getSize(), DK_IMAGE_LINEAR_STRIDE_ALIGNMENT);
     memcpy(scratchMem.getCpuAddr(), data, layout.getSize());
 
-    return loadTexture(scratchMem, imageMemBlock, cmdbuf, width, height, format, image);
+    loadTexture(scratchMem, imageMemBlock, cmdbuf, width, height, format, image);
 }
 
-DkCmdList Deko3DApplicationBase::loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image) {
+void Deko3DApplicationBase::loadTexture(const char* path, MemoryBlock& scratchMemBlock, MemoryBlock& imageMemBlock, dk::UniqueCmdBuf& cmdbuf, dk::Image& image) {
     // TODO: implement
     throw;
 }

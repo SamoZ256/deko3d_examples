@@ -3,6 +3,8 @@
 layout (location = 0) in vec2 in_texCoord;
 layout (location = 0) out vec4 out_color;
 
+layout (binding = 0) uniform sampler2D tex;
+
 void main() {
-    out_color = vec4(in_texCoord, 0.0, 1.0);
+    out_color = texture(tex, in_texCoord);
 }
